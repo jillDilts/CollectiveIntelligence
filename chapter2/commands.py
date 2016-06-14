@@ -15,3 +15,9 @@ recommendations.sim_pearson( recommendations.critics, 'Lisa Rose', 'Gene Seymour
 
 # pg 15
 recommendations.topMatches( recommendations.critics, 'Toby', n = 3 )
+
+# pg 17
+recommendations.getRecommendations(recommendations.critics, 'Toby')
+
+recommendations.getRecommendations(recommendations.critics, 'Toby', similarity = recommendations.sim_distance)
+
