@@ -46,3 +46,43 @@ def sim_distance(prefs, person1, person2):
     
     return 1 / (1 + sqrt(sum_of_squares) )
     
+#------------------------------------------------------------------------------------------
+# function sim_pearson
+# arguments: 
+#    prefs: nested dictionary of preference rating scores
+#    person1, person2: strings of names of people whose preferences to compare
+# Returns a Pearson correlation coefficient for person1 and person2
+#  (returns 0 if person1 and person2 have no ratings in common)
+#  (returns 0 if ratings are identical (?)
+#------------------------------------------------------------------------------------------
+def sim_pearson(prefs, person1, person2):
+    #Get the list of mutually rated items
+    shared_items = {}
+    for item in prefs[person1]:
+        if item in prefs[person2]: shared_items[item] = 1
+        
+    #Find the number of shared items
+    num_items = len(shared_items)
+    
+    # if they have no ratings in common, return 0
+    if num_items == 0: return 0
+    
+    #Add up all the preferences
+    sum1 = sum([ prefs[person1][item] for item in shared_items])
+    sum2 = sum([ prefs[person2][item] for item in shared_items])
+    
+    #Sum up the squares of preferences
+    sum1Sq = sum([ pow(prefs[person1][item], 2) for item in shared_items ])
+    sum2Sq = sum([ pow(prefs[person2][item], 2) for item in shared_items ])
+
+    # Sum up the products
+    pSum = sum([ prefs[person1][item] * prefs[person2][item] for item in shared_items ])
+    
+    # calculate Pearson score
+    num = pSum - (sum1 * sum2 / num_items)
+    den = sqrt( ( sum1Sq - pow(sum1, 2) / num_items ) * ( sum2Sq - pow(sum2, 2) / num_items ) )
+    if den == 0: return 0
+    
+    r = num / den
+    
+    return r
