@@ -2,7 +2,11 @@
 # recommendations.py
 # file is taken from Toby Segaran's "Programming Collective Intelligence" First edition
 #-----------------------------------------------------------------------------------
-
+import logging
+logging.basicConfig(filename='log_filename.txt', level = logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.debug('This is a log message.')
+    
 # A dictionary of movie critics and their ratings of a small set of movies
 critics = {'Lisa Rose': {'Lady in the Water': 2.5, 'Snakes on a Plane': 3.5, 'Just My Luck': 3.0, 
         'Superman Returns': 3.5, 'You, Me and Dupree': 2.5, 'The Night Listener': 3.0},
@@ -21,7 +25,6 @@ critics = {'Lisa Rose': {'Lady in the Water': 2.5, 'Snakes on a Plane': 3.5, 'Ju
 # Similarity Functions
 #------------------------------------------------------------------------------------------
 from math import sqrt
-
 
 #------------------------------------------------------------------------------------------
 # function sim_distance
@@ -60,7 +63,7 @@ def sim_pearson(prefs, person1, person2):
     shared_items = {}
     for item in prefs[person1]:
         if item in prefs[person2]: shared_items[item] = 1
-        
+    
     #Find the number of shared items
     num_items = len(shared_items)
     
@@ -86,3 +89,70 @@ def sim_pearson(prefs, person1, person2):
     r = num / den
     
     return r
+    
+#------------------------------------------------------------------------------------------
+# function topMatches
+# Returns the best matches for person from the prefs dictionary
+# Number of results and similarity function are optional parameters
+#------------------------------------------------------------------------------------------
+def topMatches(prefs, person, n = 5, similarity = sim_pearson):
+    scores = [ (similarity(prefs, person, other), other) for other in prefs if other != person]
+    
+    #Sort the list so the highest scores appear at the top
+    scores.sort()
+    scores.reverse()
+    return scores[ 0:n ]
+    
+#------------------------------------------------------------------------------------------
+# function getRecommendations
+# Gets recommendations for a person by using a weighted average of every other user's ratings
+#------------------------------------------------------------------------------------------
+def getRecommendations(prefs, person, similarity = sim_pearson):
+    logging.debug('running getRecommendations')
+    totals = {}
+    simSums = {}
+    for other in prefs:
+        logging.debug( 'comparing {0} to {1}'.format(other, person) )
+
+        # don't compare me to myself
+        if other == person: continue
+        sim = similarity(prefs, person, other)
+    
+        # ignore scores of zero or lower
+        logging.debug( 'sim is {0}'.format(sim) )
+        if sim <= 0: continue
+        for item in prefs[other]:
+            logging.debug( 'comparing item {0}'.format(item) )
+        
+            # only score movies I haven't seen yet
+            if item not in prefs[person] or prefs[person][item] == 0:
+                logging.debug( 'item {0} is new'.format(item) )
+                # Similarity * Score
+                totals.setdefault(item, 0)
+                totals[item] += prefs[other][item] * sim
+                # Sum of similarities
+                simSums.setdefault(item, 0)
+                simSums[item] += sim
+                
+    # Create the normalized list
+    rankings = [ (total / simSums[item], item) for item, total in totals.items() ]
+        
+    # Return the sorted list
+    rankings.sort()
+    rankings.reverse()
+    return rankings
+    
+#-------------------------------------------------------------------------------------------
+# function transformPrefs
+# change prefs from a list of lists of films by reviewer to a list of lists of reviewers by films
+#-------------------------------------------------------------------------------------------
+def transformPrefs(prefs):
+    result = {}
+    for person in prefs:
+        for item in prefs[person]:
+            result.setdefault(item, {})
+            
+            #Flip item and person
+            result[item][person] = prefs[person][item]
+            
+    return result
