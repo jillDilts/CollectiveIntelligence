@@ -21,3 +21,8 @@ recommendations.getRecommendations(recommendations.critics, 'Toby')
 
 recommendations.getRecommendations(recommendations.critics, 'Toby', similarity = recommendations.sim_distance)
 
+movies = recommendations.transformPrefs( recommendations.critics )
+
+recommendations.topMatches(movies, 'Superman Returns')
+
+recommendations.getRecommendations(movies, 'Just My Luck')
